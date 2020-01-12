@@ -5,9 +5,9 @@ import random
 # CONSTANTS
 
 SCREEN_TITLE = "maze-generator"
-GRID_WIDTH = 1000
-GRID_HEIGHT = 1000
-WIDTH = 20
+GRID_WIDTH = 500
+GRID_HEIGHT = 500
+WIDTH = 50
 COLUMNS = int(GRID_HEIGHT/WIDTH)
 ROWS = int(GRID_WIDTH/WIDTH)
 
@@ -63,7 +63,7 @@ class MyGame(arcade.Window):
 			print(f"next location: {next_location.row} {next_location.col}")
 
 			self.stack.append(self.current)
-			self.current.visited = True
+			# self.current.visited = True
 			next_location.visited = True
 			
 			remove_walls(self.current, next_location)
