@@ -3,8 +3,8 @@ import random
 
 grid = []
 stack = []
-grid_width = 1000
-grid_height = 1000
+grid_width = 500
+grid_height = 500
 width = 20;
 columns = int(grid_width / width)
 rows = int(grid_height / width)
@@ -16,6 +16,7 @@ class Cell:
 	visited = False
 
 	def __init__ (self, row, col):
+		
 		self.row = row
 		self.col = col
 		self.walls = { "top": True, "right": True, "bottom": True, "left": True }
@@ -183,7 +184,7 @@ def main():
 
 	on_draw()
 
-	arcade.schedule(on_update, 1/100)
+	arcade.schedule(on_update, 1/500)
 	arcade.run()
 
 
