@@ -1,67 +1,141 @@
 import arcade
 import random
 
-grid = []
-stack = []
-grid_width = 500
-grid_height = 500
-width = 20;
-columns = int(grid_width / width)
-rows = int(grid_height / width)
-current = None
+
+# CONSTANTS
+
+SCREEN_TITLE = "maze-generator"
+GRID_WIDTH = 1000
+GRID_HEIGHT = 1000
+WIDTH = 20
+COLUMNS = int(GRID_HEIGHT/WIDTH)
+ROWS = int(GRID_WIDTH/WIDTH)
+
+class MyGame(arcade.Window):
+
+	def __init__(self, width, height, title):
+
+ 		# Call the parent class initializer
+		super().__init__(width, height, title)
+
+		self.grid = []
+		self.stack = []
+		self.columns = COLUMNS
+		self.rows = ROWS
+		self.current = Cell(0,0)
+
+		arcade.set_background_color(arcade.color.BLACK)
+		
+
+
+
+	def setup(self):
+		""" Set up the game and initialize the variables. """
+		
+		for row in range(ROWS):
+			row_array = [] 
+			for column in range(COLUMNS):
+				row_array.append(Cell(row, column))
+
+			self.grid.append(row_array)
+
+
+		arcade.start_render()
+
+		for row in self.grid:
+			for cell in row:
+				cell.draw()
+
+		self.current = self.grid[0][0]
+
+
+
+
+
+	def on_update(self, delta_time):
+		
+		next_location = self.current.checkNeighbours(self.grid)
+
+		print(f"NEXT LOCK:{next_location}")
+		print(f"CURRENT STACK: {len(self.stack)}")
+
+		if next_location is not None:
+			print(f"next location: {next_location.row} {next_location.col}")
+
+			self.stack.append(self.current)
+			self.current.visited = True
+			next_location.visited = True
+			
+			remove_walls(self.current, next_location)
+			
+			self.current.draw()
+			next_location.draw()
+			
+			self.current = next_location
+
+
+		elif self.stack:
+			print('stack')
+			self.current.draw()
+			self.current = self.stack.pop()
+
+
+		self.current.highlight()
+
+
+		print(f"new current: {self.current.row, self.current.col}")
+
 
 
 class Cell:
-
-	visited = False
 
 	def __init__ (self, row, col):
 		
 		self.row = row
 		self.col = col
 		self.walls = { "top": True, "right": True, "bottom": True, "left": True }
-
+		self.visited = False
 
 	def draw(self):
 
-		x = self.row * width
-		y = self.col * width
+		x = self.row * WIDTH
+		y = self.col * WIDTH
 
 		#top line
 		if self.walls["top"]:
-			arcade.draw_line(x, y+width, x+width, y+width, arcade.color.WHITE, 2)
+			arcade.draw_line(x, y + WIDTH, x + WIDTH, y + WIDTH, arcade.color.WHITE, 2)
 		#right line
 		if self.walls["right"]:
-			arcade.draw_line(x+width, y, x+width, y+width, arcade.color.WHITE, 2)
+			arcade.draw_line(x + WIDTH, y, x + WIDTH, y + WIDTH, arcade.color.WHITE, 2)
 		#bottom lin
 		if self.walls["bottom"]:
-			arcade.draw_line(x, y, x+width, y, arcade.color.WHITE, 2)
+			arcade.draw_line(x, y, x + WIDTH, y, arcade.color.WHITE, 2)
 		#left line
 		if self.walls["left"]:
- 			arcade.draw_line(x, y, x, y+width, arcade.color.WHITE, 2)
+ 			arcade.draw_line(x, y, x, y + WIDTH, arcade.color.WHITE, 2)
 		
 		# Have I been visited?
 		if(self.visited):
-			arcade.draw_rectangle_filled(x+(width/2), y+(width/2), width, width, arcade.color.ILLUMINATING_EMERALD)
+			arcade.draw_rectangle_filled(x + (WIDTH/2), y + (WIDTH/2), WIDTH, WIDTH, arcade.color.ILLUMINATING_EMERALD)
 
 
 	def highlight(self):
 
-		x = self.row * width
-		y = self.col * width
-		arcade.draw_rectangle_filled(x+(width/2), y+(width/2), width, width, arcade.color.EMERALD)
+		x = self.row * WIDTH
+		y = self.col * WIDTH
+		arcade.draw_rectangle_filled(x+(WIDTH/2), y+(WIDTH/2), WIDTH, WIDTH, arcade.color.EMERALD)
 
 
-	def checkNeighbours(self):
+	def checkNeighbours(self, grid):
 
 		row = self.row
 		col = self.col
 		neighbours = []
 
-		top_neighbour = getValidCell(row, col+1)
-		right_neighbour = getValidCell(row+1, col)
-		bottom_neighbour = getValidCell(row, col-1)
-		left_neighbour = getValidCell(row-1, col)
+		top_neighbour = self.getValidCell(row, col+1, grid)
+		right_neighbour = self.getValidCell(row+1, col, grid)
+		bottom_neighbour = self.getValidCell(row, col-1, grid)
+		left_neighbour = self.getValidCell(row-1, col, grid)
 
 
 		if top_neighbour is not None and not top_neighbour.visited:
@@ -86,18 +160,10 @@ class Cell:
 			return None
 
 
-
-def getValidCell(row, col):
-	if not row < 0 and not col < 0:
-		if not col > columns-1 and not row > rows-1:
-			return grid[row][col]
-
-
-
-def draw_grid(grid):
-	for row in grid:
-		for cell in row:
-			cell.draw()
+	def getValidCell(self, row, col, grid):
+		if not row < 0 and not col < 0:
+			if not col > COLUMNS-1 and not row > ROWS-1:
+				return grid[row][col]
 
 
 
@@ -121,75 +187,13 @@ def remove_walls(current, next_location):
 		next_location.walls["bottom"] = False
 
 
-def on_draw():
-
-	global current
-
-	arcade.start_render()
-
-	draw_grid(grid)
-
-
-def on_update(delta_time):
-	
-	global current
-
-	next_location = current.checkNeighbours()
-
-
-	if next_location is not None:
-
-		stack.append(current)
-		
-		next_location.visited = True
-		
-		remove_walls(current, next_location)
-		
-		current.draw()
-		next_location.draw()
-		
-		current = next_location
-
-	elif stack:
-
-		current.draw()
-		current = stack.pop()
-
-
-	current.highlight()
-
-
-	print(f"new current: {current.row, current.col}")
-
-
 def main():
-
-	global current
-	
-	for row in range(rows):
-
-		row_array = [] 
-
-		for column in range(columns):
-			row_array.append(Cell(row, column))
-
-		grid.append(row_array)
-
-
-	current = grid[0][0]
-	current.visited = True
-
-	arcade.open_window(grid_width, grid_height, "Grid")
-	arcade.set_background_color(arcade.color.BLACK)
-
-	on_draw()
-
-	arcade.schedule(on_update, 1/500)
+	""" Main method """
+	window = MyGame(GRID_WIDTH, GRID_HEIGHT, SCREEN_TITLE)
+	window.setup()
 	arcade.run()
+
 
 
 if __name__ == "__main__":
     main()
-
-
-
